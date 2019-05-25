@@ -1,16 +1,16 @@
 # Infni Scroll
  
- This is a simple vue.js component for **virtualized scrolling over local csv files in the browser**. Its mainly a fun free-time project, also for learning a bit vue.js, html, css, javascript (you always learn something new).
+ This is a simple vue.js component for **virtualized scrolling over local csv files in the browser**. Its mainly a fun and free-time project, also for learning some vue.js, html, css, javascript (you always learn something new).
 
 ## What is it for?
- However I also have the aspiration to solve an professional problem of web-clients (or was this solved somewhere else already?):
+ However I also have the aspiration to solve an professional problem of web-clients (or was this solved somewhere else already?)
 
- * You have fat web client (SPA, PWA...) in the business world from which your customer wants to upload or view some **local text file (csv)**
+ * imagine you have a fat web client (SPA, PWA...) in the business world. Basically your customer needs to upload or view some **local text file (csv)**.
  * the file could potentially be large to huge in size: **hundreds of megabyte to some gigabytes**
  * the files can have about **14 text colums** and several **million lines** 
- * **all data** should be displayed in a **scrollable table**
- * after selecting the file data should be displayed **immediately(!)**
- * **instantly scrolling to the end** must be possible
+ * **all data** should be displayed in a **scrollable table** (no pagination!)
+ * after selecting the file, data should be displayed **immediately(!)**
+ * **instantly scrolling/jumping to the end** must be possible
  * only reading of the data is needed, but it must be a **vue.js component**
  
 ## The problem
