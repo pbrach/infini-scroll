@@ -1,0 +1,47 @@
+/* Only relevant for Demo, Testing and Development: */
+/*--------------------------------------------------*/
+body {
+    margin: 20px;
+}
+h2 {
+    text-align: center;
+    color: orange;
+    font-weight: bold;
+}
+
+.control-panel {
+    background-color: aliceblue;
+    padding: 15px;
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+
+
+/* Relevant for the Table/Scroller Component: */
+/*--------------------------------------------*/
+.frame {
+    max-height: 60vh;
+    overflow: auto;
+    overflow-x: hidden;
+}
+
+table tbody, table thead
+{
+    display: block;
+    white-space: nowrap;
+}
+
+td {
+    padding: 3px;
+}
+
+td,th {
+    max-width: 70px;
+    min-width: 70px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+tr.spacer {
+    max-height: 0;
+}

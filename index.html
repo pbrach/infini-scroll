@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>CSV Infini Scroll</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+
+<body>
+
+    <div id="main-content">
+
+        <h2>CSV Infini Scroll</h2>
+
+<!-- A development control panel that shows some stats about the loaded file -->
+        <div class="control-panel">
+            <div>
+                <input ref="fileChooser" type="file" v-on:change="fileChangedHandler($event)" accept=".csv">
+                <button v-on:click.self.stop="clearAll()">Clear</button>
+            </div>
+            <div v-if="file !== null">
+                Selected file:
+                <strong>
+                    {{file.name}}, size: {{(file.size/(1024*1024)).toFixed(2)}} MB,
+                    {{totalLineCount}} lines
+                </strong>
+            </div>
+            <div v-else>
+                <br>
+            </div>
+            <div>
+                row height {{rowHeight}}, comp body height: {{compBodyHeight}}
+            </div>
+            <div>
+                <button v-on:click.self.stop="cancelParsing()">Cancel Parsing</button>
+            </div>
+        </div>
+
+
+
+<!-- The actual table/scroll component -->
+        <div>
+            <table class="data-body" ref="tbody">
+                <thead>
+                    <tr>
+                        <th v-for="header in headerRow">{{header}}</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+        <div class="frame" ref="scrollFrame" v-on:scroll="currentScrollPos">
+            <table class="data-body" v-bind:style="{height: compBodyHeight+'px'}">
+                <tbody ref="tableBody">
+                    <tr class="spacer" v-bind:style="{height: topMargin+'px'}" />
+                    <tr v-for="row in displayRows">
+                        <td v-for="cell in row" ref="bodyRow">{{cell}}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    </div>
+
+
+
+    <script type="text/javascript" src="https://unpkg.com/vue/dist/vue.js"></script>
+
+    <script type="text/javascript" src="lib/papaparse.min.js"></script>
+    <script type="text/javascript" src="lib/file-wrapper.min.js"></script>
+    <script type="text/javascript" src="lib/line-navigator.min.js"></script>
+
+    <script type="text/javascript" src="main.js"></script>
+</body>
+
+</html>
