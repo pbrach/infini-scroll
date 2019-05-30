@@ -9,7 +9,8 @@ var customappaproto = new Vue({
         displayRows: [],
         localWebworker: null,
         headerRow: [],
-        totalLineCount: -1,
+        estimatedLineCount: -1,
+        exactLinieCount: -1,
         topMargin: 0,
     },
     created() {
@@ -18,11 +19,14 @@ var customappaproto = new Vue({
         }
     },
     computed: {
+        lineCount() {
+            return this.exactLinieCount !== -1 ? this.exactLinieCount : this.estimatedLineCount;
+        },
         compBodyHeight() {
-            return this.totalLineCount * this.rowHeight;
+            return this.lineCount * this.rowHeight;
         },
         rowHeight() {
-            if (this.totalLineCount <= 0)
+            if (this.lineCount <= 0)
                 return 0;
 
             let rows = this.$refs.bodyRow;
@@ -46,7 +50,8 @@ var customappaproto = new Vue({
             const height = this.$refs.scrollFrame.offsetHeight;
             return Math.floor(height / rowHeight) + 1;
         },
-        currentScrollPos() {
+        onScrollHandler() {
+            console.log(this.$refs.scrollFrame.scrollTop);
             let vertScrollPos = this.$refs.scrollFrame.scrollTop;
             let rowNum = Math.floor(vertScrollPos / this.rowHeight) + 1;
             let dataSlice = this.inner.parsedData.slice(rowNum, rowNum+this.rowsPerScreen);
@@ -57,8 +62,8 @@ var customappaproto = new Vue({
         },
         clearState() {
             this.topMargin =0;
-            this.innerEstimatedLines = 0;
-            this.totalLineCount = -1;
+            this.exactLinieCount = -1;
+            this.estimatedLineCount = -1;
             this.file = null;
             this.displayRows.splice(0);
             this.inner.parsedData = [];
@@ -98,16 +103,17 @@ var customappaproto = new Vue({
                 that.headerRow = parsedRows[0];
 
                 var bytesPerLine = totalBytes / (lines.length - 1);
-                setTimeout(function(){
-                    that.totalLineCount = Math.floor((that.file.size - lines[0].length) / bytesPerLine);
-                }, 100); // wait 100 ms because setting totalLineCount updates row and body height
+                setTimeout(
+                    () => that.estimatedLineCount = Math.floor((that.file.size - lines[0].length) / bytesPerLine),
+                    200);
+                //use setTimeout because setting totalLineCount updates row and body height
             });
         },
         asyncGetTotalLinecount() {
             const lineWorker = new Worker("linecountWorker.js");
             var that = this;
             lineWorker.onmessage = function (message) {
-                that.totalLineCount = message.data
+                setTimeout(() => that.exactLinieCount = message.data, 200);
                 lineWorker.terminate();
             };
             lineWorker.postMessage({

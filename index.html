@@ -27,7 +27,7 @@
                 Selected file:
                 <strong>
                     {{file.name}}, size: {{(file.size/(1024*1024)).toFixed(2)}} MB,
-                    {{totalLineCount}} lines
+                    {{lineCount}} lines
                 </strong>
             </div>
             <div v-else>
@@ -53,7 +53,7 @@
                 </thead>
             </table>
         </div>
-        <div class="frame" ref="scrollFrame" v-on:scroll="currentScrollPos">
+        <div class="frame" ref="scrollFrame" v-on:scroll="onScrollHandler">
             <table class="data-body" v-bind:style="{height: compBodyHeight+'px'}">
                 <tbody ref="tableBody">
                     <tr class="spacer" v-bind:style="{height: topMargin+'px'}" />
