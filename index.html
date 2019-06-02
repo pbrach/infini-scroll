@@ -21,7 +21,7 @@
         <div class="control-panel">
             <div>
                 <input ref="fileChooser" type="file" v-on:change="fileChangedHandler($event)" accept=".csv">
-                <button v-on:click.self.stop="clearAll()">Clear</button>
+                <button v-on:click.self.stop="clearAll()">Clear & Cancel</button>
             </div>
             <div v-if="file !== null">
                 Selected file:
@@ -35,9 +35,6 @@
             </div>
             <div>
                 row height {{rowHeight}}, comp body height: {{compBodyHeight}}
-            </div>
-            <div>
-                <button v-on:click.self.stop="cancelParsing()">Cancel Parsing</button>
             </div>
         </div>
 

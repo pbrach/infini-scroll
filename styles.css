@@ -23,6 +23,7 @@ h2 {
     max-height: 60vh;
     overflow: auto;
     overflow-x: hidden;
+    border: 1px solid gray;
 }
 
 table tbody, table thead

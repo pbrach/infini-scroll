@@ -1,7 +1,11 @@
 // begin magic... ;-)
+//http://127.0.0.1:5500/index.html
 "use strict";
+// importScripts('../lib/papaparse.min.js');
+// to disable scrolling:
+// https://stackoverflow.com/questions/4770025/how-to-disable-scrolling-temporarily
 
-var customappaproto = new Vue({
+var myInfini = new Vue({
     el: '#main-content',
     data: {
         hasAccent: false,
@@ -9,9 +13,15 @@ var customappaproto = new Vue({
         displayRows: [],
         localWebworker: null,
         headerRow: [],
+
         estimatedLineCount: -1,
         exactLinieCount: -1,
         topMargin: 0,
+
+        scrollLastCall: 0,
+
+        lowerFrameLimit: -1,
+        upperFrameLimit: -1,
     },
     created() {
         this.inner = {
@@ -39,29 +49,98 @@ var customappaproto = new Vue({
 
             return bodyRow.offsetHeight;
         },
-        rowsPerScreen(){
-            if(this.rowHeight <= 0)
+        screenHeight() {
+            return this.$refs.scrollFrame.offsetHeight;
+        },
+        rowsPerScreen() {
+            if (this.rowHeight <= 0)
                 return;
             return this.getRowsInTableBody(this.rowHeight);
-        }
+        },
     },
     methods: {
-        getRowsInTableBody(rowHeight){
+        getScrollPos() {
+            return this.$refs.scrollFrame.scrollTop;
+        },
+        getRowsInTableBody(rowHeight) {
             const height = this.$refs.scrollFrame.offsetHeight;
             return Math.floor(height / rowHeight) + 1;
         },
         onScrollHandler() {
-            console.log(this.$refs.scrollFrame.scrollTop);
-            let vertScrollPos = this.$refs.scrollFrame.scrollTop;
-            let rowNum = Math.floor(vertScrollPos / this.rowHeight) + 1;
-            let dataSlice = this.inner.parsedData.slice(rowNum, rowNum+this.rowsPerScreen);
-            this.displayRows.splice(0);
-            this.displayRows.push(...dataSlice);
+            if (!this.newFrameReached()) 
+                return;
 
-            this.topMargin = (rowNum - 1) * this.rowHeight;
+            if (this.scrollLastCall) 
+                clearTimeout(this.scrollLastCall);
+
+            this.scrollLastCall = setTimeout(() => {
+
+                this.innerScrollFunc();
+
+            }, 100);
+        },
+        newFrameReached() {
+            const scrollPos = this.getScrollPos();
+            if (
+                this.lowerFrameLimit > 0 &&
+                scrollPos <= this.lowerFrameLimit) {
+                return true;
+            }
+
+            if (scrollPos >= this.upperFrameLimit) {
+                return true;
+            }
+
+            return false;
+        },
+        async innerScrollFunc() {
+            const scrollPos = this.getScrollPos();
+
+            const rowNum = Math.floor(scrollPos / this.rowHeight);
+            const fromRow = rowNum - 2 * this.rowsPerScreen;
+            const toRow = rowNum + 3 * this.rowsPerScreen + 1;
+            const dataSlice = await this.getData(fromRow, toRow);
+
+            for (let i = 0; i < this.displayRows.length; i++) {
+                Vue.set(this.displayRows, i, dataSlice[i]);
+            }
+
+            this.lowerFrameLimit = scrollPos - this.screenHeight;
+            this.upperFrameLimit = scrollPos + this.screenHeight;
+
+            let topSpace = (fromRow - 1) * this.rowHeight;
+            this.topMargin = topSpace < 0 ? 0 : topSpace;
+        },
+        async getData(from, to) {
+            if (from < 0)
+                from = 0;
+            if (to > this.lineCount)
+                to = this.lineCount - 1;
+
+            let slice = this.inner.parsedData.slice(from, to);
+            // if (slice.length < this.rowsPerScreen) {
+            //     slice = await this.getDirectData(from, to);
+            // }
+            return slice;
+        },
+        async getDirectData(from, to) {
+            const navi = new LineNavigator(this.file);
+            let slice = [];
+
+            return new Promise(resolve => {
+                navi.readLines(from, to - 1,
+                    function (err, index, lines, isEof, progress) {
+                        for (let i = 0; i < lines.length; i++) {
+                            const lineColumns = Papa.parse(lines[i]).data[0];
+                            slice.push(lineColumns);
+                        }
+                        resolve(slice);
+                    }
+                )
+            });
         },
         clearState() {
-            this.topMargin =0;
+            this.topMargin = 0;
             this.exactLinieCount = -1;
             this.estimatedLineCount = -1;
             this.file = null;
@@ -73,7 +152,7 @@ var customappaproto = new Vue({
             this.$refs.fileChooser.value = null;
             try {
                 this.localWebworker.terminate();
-            } catch { } // its possible that not parsing worker is running
+            } catch { } // its possible that parsing worker is not running anymore
 
             this.clearState();
         },
@@ -85,7 +164,9 @@ var customappaproto = new Vue({
             this.file = event.target.files[0];
             this.showInitialPreview();
             this.asyncGetTotalLinecount();
-            this.startParse() 
+            this.startParse()
+            this.lowerFrameLimit = 0 - this.screenHeight;
+            this.upperFrameLimit = 0 + this.screenHeight;
         },
         // Fast Preview
         showInitialPreview() {
@@ -128,6 +209,7 @@ var customappaproto = new Vue({
             this.localWebworker.onmessage = function (event) {
                 if (event.data === "Done") {
                     that.localWebworker.terminate();
+                    that.inner.parsedData.splice(0, 1); // remove header row
                     return;
                 }
 
